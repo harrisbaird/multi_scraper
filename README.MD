@@ -1,22 +1,59 @@
 # MultiScraper
-## Status
-[![Gem Version](http://img.shields.io/gem/v/multi_scraper.svg)](http://badge.fury.io/rb/multi_scraper)
-[![Build Status](https://secure.travis-ci.org/harrisbaird/multi_scraper.svg?branch=master)](http://travis-ci.org/harrisbaird/multi_scraper?branch=master)
-[![Code Climate](https://img.shields.io/codeclimate/github/harrisbaird/multi_scraper.svg)](https://codeclimate.com/github/harrisbaird/multi_scraper)
-[![Coverage Status](http://img.shields.io/coveralls/harrisbaird/multi_scraper.svg)](https://coveralls.io/r/harrisbaird/multi_scraper)
-[![Dependency Status](http://img.shields.io/gemnasium/harrisbaird/multi_scraper.svg)](https://gemnasium.com/harrisbaird/multi_scraper)
-## Description
-A web scraper which simplifies scraping both feeds and web pages.
-## Dependencies
-* Ruby 1.9.2 or newer
-* [Feedjira](https://github.com/feedjira/feedjira)
-* [Nokogiri](https://github.com/sparklemotion/nokogiri)
-## Installation
-Add this line to your application's Gemfile:
+
+A web scraper which uses Ruby's metaprogramming to extract data from one or more sources, processes it and returns it in a structured way.
+
+***This is just a test***, you really shouldn't use this, try [Wombat](https://github.com/felipecsl/wombat) instead.
+
+## Example
 ```ruby
-gem 'multi_scraper'
+require 'multi_scraper'
+
+class HackerNewsScraper
+  include MultiScraper
+
+  page :hn, url: 'https://news.ycombinator.com/'
+
+  array :items, hn_xpath: '//tr[@class="athing"]' do |entry|
+    string  :title,  entry_xpath: './/td[@class="title"]/a'
+    string  :url,    entry_xpath: './/td[@class="title"]/a/@href'
+
+    # Lookup node and save it as `data` for future use
+    node    :data,   entry_xpath: 'following-sibling::tr'
+
+    integer :points, data_xpath: './/span[@class="score"]',
+                     regex: [/(\d+) points/, 1]
+    string  :user,   data_xpath: './/a[@class="hnuser"]'
+    string  :posted, data_xpath: './/span[@class="age"]'
+  end
+
+  group :stats do
+    integer :item_count,   with: proc { items.count }
+    value   :most_popular, with: proc { items.max_by { |i| i[:points] } }
+  end
+end
+
+HackerNewsScraper.fetch
+
+{
+  items: [
+    {
+      title: "Why do investment bankers feel their jobs are safe from automation?",
+      url: "https://www.quora.com/Why-do-traders-in-investment-banks-feel-their-jobs-are-immune-from-AI-automation-and-deep-learning?share=1",
+      points: 54,
+      user: "aburan28",
+      posted: "2 hours ago"
+    }
+    # ...
+  ],
+  stats: {
+    item_count: 30,
+    most_popular: {
+      title: "The moving sofa problem",
+      url: "https://www.math.ucdavis.edu/~romik/movingsofa/",
+      points: 496,
+      user: "vinnyglennon",
+      posted: "15 hours ago"
+    }
+  }
+}
 ```
-And then execute:
-    $ bundle
-Or install it yourself as:
-    $ gem install multi_scraper

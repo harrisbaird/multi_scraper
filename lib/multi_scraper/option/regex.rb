@@ -7,7 +7,7 @@ module MultiScraper
 
       def self.parse(_context, value, _option_key, option_value)
         pattern, position = *option_value
-        result = pattern.match(value)
+        result = pattern.match(value.to_s)
         position ? result[position] : result
       end
     end

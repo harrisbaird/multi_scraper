@@ -3,7 +3,10 @@ module MultiScraper
     class Node < Value
       def parse(context)
         value = super
-        # Parse string as a Nokogiri fragment
+
+        return value if value.is_a?(Nokogiri::XML::Searchable)
+
+        # Attempt to parse string as a Nokogiri fragment
         value.respond_to?(:to_str) && Nokogiri::HTML.fragment(value)
       end
 
