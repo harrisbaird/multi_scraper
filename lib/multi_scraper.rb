@@ -1,38 +1,71 @@
 require 'feedjira'
-require 'nokogiri'
-require 'multi_scraper/configuration'
-require 'multi_scraper/property'
-require 'multi_scraper/property_group'
-require 'multi_scraper/option'
-require 'multi_scraper/dsl'
+require 'multi_scraper/openuri_request'
 
 module MultiScraper
   class MissingPage < StandardError; end
-  class MissingOptionsHash < StandardError; end
-  class InvalidOption < StandardError; end
-  class InvalidMethod < StandardError; end
+  class MissingPageAdapter < StandardError; end
+  class InvalidCallback < StandardError; end
 
   class << self
+    attr_reader :page_adapter
+    attr_writer :request_adapter
+    attr_writer :user_agent
+
+    def included(base)
+      base.send(:include, DSL::InstanceMethods)
+      base.extend(DSL::ClassMethods)
+    end
+
     def new(&block)
       klass = Class.new
       klass.send(:include, MultiScraper)
-      klass.fetch(&block)
+      klass.new(&block)
     end
 
-    def configuration
-      @configuration ||= Configuration.new
+    def parse(&block)
+      new(&block).parse
     end
 
     def configure
-      yield(configuration)
+      yield self
     end
 
-    def add_property(klass)
-      MultiScraper::Property.classes.unshift klass
+    def properties
+      @properties ||= []
     end
 
-    def add_option(klass)
-      MultiScraper::Option.classes.unshift klass
+    def register_property(klass)
+      properties.unshift klass
     end
+
+    def user_agent
+      @user_agent ||= 'MultiScraper'
+    end
+
+    def page_adapter=(page_adapter)
+      require "multi_scraper/page_adapters/#{page_adapter}_adapter"
+      @page_adapter = page_adapter
+    end
+
+    def page_adapter_class
+      raise MissingPageAdapter unless page_adapter
+      MultiScraper.const_get("Adapters::#{page_adapter.capitalize}Adapter")
+    end
+
+    def request_adapter
+      @request_adapter ||= MultiScraper::OpenuriRequest
+    end
+  end
+end
+
+require 'multi_scraper/property_group'
+require 'multi_scraper/dsl'
+
+# Attempt to load page adapter
+[:nokogiri, :oga].each do |page_adapter|
+  begin
+    MultiScraper.page_adapter = page_adapter
+    break
+  rescue LoadError
   end
 end

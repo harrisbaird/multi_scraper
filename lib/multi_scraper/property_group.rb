@@ -1,31 +1,27 @@
+require 'multi_scraper/properties/base'
+require 'multi_scraper/properties/array'
+require 'multi_scraper/properties/feed'
+require 'multi_scraper/properties/fragment'
+require 'multi_scraper/properties/group'
+require 'multi_scraper/properties/integer'
+require 'multi_scraper/properties/iterator'
+require 'multi_scraper/properties/page'
+require 'multi_scraper/properties/string'
+require 'multi_scraper/properties/value'
+
+
 module MultiScraper
   class PropertyGroup < Hash
-    attr_reader :ancestor, :entry
-    def initialize(ancestor = nil, entry = nil)
+    def initialize(ancestor = nil)
       @ancestor = ancestor
-      @entry = entry
       @values = {}
       setup_property_methods
     end
 
-    def parse(_context = nil)
+    def parse
       each_with_object({}) do |(key, prop), hash|
-        hash[key] = prop.parse(self) unless prop.excluded?
-      end
-    end
-
-    def setup_property_methods
-      MultiScraper::Property.classes.each do |klass|
-        define_singleton_method(klass.key) do |name, options = {}, &block|
-          define_property(klass, name, options, &block)
-        end
-      end
-    end
-
-    def define_property(klass, name, options, &block)
-      self[name] = klass.new(options, &block)
-      define_singleton_method(name) do
-        @values[name] ||= self[name].parse(self)
+        # TODO: if callback, don't parse
+        hash[key] = prop.parse unless prop.excluded?
       end
     end
 
@@ -35,6 +31,29 @@ module MultiScraper
 
     def method_missing(method, *args, &block)
       @ancestor && @ancestor.send(method, *args, &block) || super
+    end
+
+    def invoke_method(method)
+      raise "Failed to call: #{method}" unless respond_to?(method)
+      send(method)
+    end
+
+    private
+
+    def setup_property_methods
+      MultiScraper.properties.each do |klass|
+        define_singleton_method(klass.key) do |name, options = {}, &block|
+          define_property(klass, name, options, &block)
+        end
+      end
+    end
+
+    def define_property(klass, name, options, &block)
+      self[name] = klass.new(name, self, options, &block)
+
+      define_singleton_method(name) do
+        @values[name] ||= self[name].parse
+      end
     end
   end
 end
