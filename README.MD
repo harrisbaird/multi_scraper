@@ -1,10 +1,14 @@
 # MultiScraper
 
-This is v2, unfortunately not functional and tests were lost.
+A structured web scraper.
 
-There is also the [v1 branch](https://github.com/harrisbaird/multi_scraper/tree/v1).
+This was designed to pull data from multiple sources and return it a structured way, ready to be validate and saved. So pretty much the extract and transform steps of ETL.
 
-***Do not use this***, try [Wombat](https://github.com/felipecsl/wombat) or [Scrapy](https://scrapy.org/) instead.
+This was recovered, as such is not functional and tests were lost.
+
+There is also the [v1 branch](https://github.com/harrisbaird/multi_scraper/tree/v1) which is functional and has tests.
+
+This is just an experiment and I recommend you use something like [Wombat](https://github.com/felipecsl/wombat) or [Scrapy](https://scrapy.org/) instead.
 
 ## Example
 ```ruby
@@ -32,4 +36,33 @@ class HackerNewsScraper
     value :most_popular, proc { items.max_by { |i| i[:points] } }
   end
 end
+
+```
+
+Run the scraper with `HackerNewsScraper.parse`.
+
+
+```ruby
+{
+  items: [
+    {
+      title: "Why do investment bankers feel their jobs are safe from automation?",
+      url: "https://www.quora.com/Why-do-traders-in-investment-banks-feel-their-jobs-are-immune-from-AI-automation-and-deep-learning?share=1",
+      points: 54,
+      user: "aburan28",
+      posted: "2 hours ago"
+    }
+    # snipped 29 more items
+  ],
+  stats: {
+    item_count: 30,
+    most_popular: {
+      title: "The moving sofa problem",
+      url: "https://www.math.ucdavis.edu/~romik/movingsofa/",
+      points: 496,
+      user: "vinnyglennon",
+      posted: "15 hours ago"
+    }
+  }
+}
 ```
