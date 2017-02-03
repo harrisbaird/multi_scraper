@@ -1,5 +1,8 @@
 # MultiScraper
 
+***Uploaded to GitHub for posterity, I don't recommended you use this. Try [Scrapy](https://scrapy.org/) or [Wombat](https://github.com/felipecsl/wombat) instead.***  
+
+
 A structured web scraper.
 
 This was designed to pull data from multiple sources and return it a structured way, ready to be validate and saved. So pretty much the extract and transform steps of ETL.
@@ -7,8 +10,6 @@ This was designed to pull data from multiple sources and return it a structured 
 This was recovered, as such is not functional and tests were lost.
 
 There is also the [v1 branch](https://github.com/harrisbaird/multi_scraper/tree/v1) which is functional and has tests.
-
-This is just an experiment and I recommend you use something like [Wombat](https://github.com/felipecsl/wombat) or [Scrapy](https://scrapy.org/) instead.
 
 ## Example
 ```ruby
